@@ -16,9 +16,12 @@
 
 package com.example.background
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.bumptech.glide.Glide
 import com.example.background.databinding.ActivityBlurBinding
@@ -34,7 +37,7 @@ class BlurActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Get the ViewModel
-        viewModel = ViewModelProviders.of(this).get(BlurViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(BlurViewModel::class.java)
 
         // Image uri should be stored in the ViewModel; put it there then display
         val imageUriExtra = intent.getStringExtra(KEY_IMAGE_URI)
@@ -43,7 +46,37 @@ class BlurActivity : AppCompatActivity() {
             Glide.with(this).load(imageUri).into(binding.imageView)
         }
 
+        viewModel.outputWorkInfos.observe(this, Observer { listOfWorkInfo ->
+            if (listOfWorkInfo.isNullOrEmpty()) {
+                return@Observer
+            }
+
+            if (listOfWorkInfo[0].state.isFinished) {
+                showWorkFinished()
+
+                val outputImageUri = listOfWorkInfo[0].outputData.getString(KEY_IMAGE_URI)
+                if (!outputImageUri.isNullOrEmpty()) {
+                    viewModel.setOutputUri(outputImageUri)
+                    binding.seeFileButton.visibility = View.VISIBLE
+                }
+            } else {
+                showWorkInProgress()
+                binding.seeFileButton.visibility = View.GONE
+            }
+        })
+
         binding.goButton.setOnClickListener { viewModel.applyBlur(blurLevel) }
+        binding.seeFileButton.setOnClickListener {
+            viewModel.outputUri?.let {  currentUri ->
+                val actionView = Intent(Intent.ACTION_VIEW, currentUri)
+                actionView.resolveActivity(packageManager)?.run {
+                    startActivity(actionView)
+                }
+            }
+        }
+        binding.cancelButton.setOnClickListener {
+            viewModel.cancelWork()
+        }
     }
 
     /**

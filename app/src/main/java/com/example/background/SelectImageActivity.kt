@@ -49,6 +49,7 @@ class SelectImageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // lwu: view binding
         binding = ActivitySelectBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -111,6 +112,7 @@ class SelectImageActivity : AppCompatActivity() {
     }
 
     private fun isPermissionGranted(permission: String) =
+            // Check permission granted
             ContextCompat.checkSelfPermission(this, permission) ==
                     PackageManager.PERMISSION_GRANTED
 
